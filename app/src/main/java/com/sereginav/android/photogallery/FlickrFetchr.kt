@@ -54,7 +54,7 @@ class FlickrFetchr {
     }
 
     @WorkerThread
-    fun fetchPhotos(url: String): Bitmap?{
+    fun fetchPhoto(url: String): Bitmap?{
         val response: Response<ResponseBody> =
             flickrApi.fetchUrlBytes(url).execute()
         val bitmap =
