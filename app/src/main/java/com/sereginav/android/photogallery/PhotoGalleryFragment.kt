@@ -7,11 +7,11 @@ import android.os.Bundle
 import android.os.Handler
 import android.util.Log
 import android.view.*
-import androidx.fragment.app.Fragment
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.Observer
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -32,7 +32,7 @@ class PhotoGalleryFragment : Fragment() {
         thumbnailDownloader = ThumbnailDownloader(responseHandler){
             photoHolder, bitmap ->
             val drawable = BitmapDrawable(resources, bitmap)
-            photoHolder.bindDrawable(drawable)
+            photoHolder.imageView.setImageDrawable(drawable)
         }
         lifecycle.addObserver(thumbnailDownloader.fragmentLifecycleObserver)
     }
@@ -52,11 +52,10 @@ class PhotoGalleryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         photoGalleryViewModel.galleryItemLiveData.observe(
-            viewLifecycleOwner,
-            Observer {galleryItems ->
-                photoRecyclerView.adapter = PhotoAdapter(galleryItems)
-            }
-        )
+            viewLifecycleOwner
+        ) { galleryItems ->
+            photoRecyclerView.adapter = PhotoAdapter(galleryItems)
+        }
     }
 
     override fun onDestroyView() {
@@ -104,8 +103,14 @@ class PhotoGalleryFragment : Fragment() {
         }
     }
 
-    private class PhotoHolder(itemImageView: ImageView) : RecyclerView.ViewHolder(itemImageView){
-        val bindDrawable: (Drawable) -> Unit = itemImageView::setImageDrawable
+    private class PhotoHolder(photoItemView: View) : RecyclerView.ViewHolder(photoItemView){
+        val imageView: ImageView
+        val textView: TextView
+
+        init{
+            imageView = photoItemView.findViewById(R.id.photo_image)
+            textView = photoItemView.findViewById(R.id.photo_text)
+        }
     }
 
 
@@ -128,7 +133,10 @@ class PhotoGalleryFragment : Fragment() {
                     requireContext(),
                     R.drawable.bill_up_close
                 )?: ColorDrawable()
-            holder.bindDrawable(placeholder)
+            holder.imageView.setImageDrawable(placeholder)
+            holder.textView.setText(galleryItem.title)
+
+            thumbnailDownloader.queueThumbnail(holder, galleryItem.url)
         }
     }
 
