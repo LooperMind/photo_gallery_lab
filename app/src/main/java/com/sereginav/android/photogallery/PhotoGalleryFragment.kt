@@ -12,6 +12,7 @@ import android.widget.TextView
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -52,14 +53,16 @@ class PhotoGalleryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         photoGalleryViewModel.galleryItemLiveData.observe(
-            viewLifecycleOwner
-        ) { galleryItems ->
-            photoRecyclerView.adapter = PhotoAdapter(galleryItems)
-        }
+            viewLifecycleOwner,
+            Observer { galleryItems ->
+                Log.d(TAG, "Have gallery items from view model $galleryItems")
+                photoRecyclerView.adapter = PhotoAdapter(galleryItems)
+        })
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
+        thumbnailDownloader.clearQueue()
         viewLifecycleOwner.lifecycle.removeObserver(thumbnailDownloader.viewLifecycleObserver)
     }
 
@@ -96,7 +99,7 @@ class PhotoGalleryFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId){
             R.id.menu_item_clear ->{
-                photoGalleryViewModel.fetchPhotos("")
+                photoGalleryViewModel.fetchPhotos()
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -114,17 +117,17 @@ class PhotoGalleryFragment : Fragment() {
     }
 
 
-    private inner class PhotoAdapter(private val galleryItems: List<GalleryItem>):RecyclerView.Adapter<PhotoHolder>(){
+    private inner class PhotoAdapter(private val galleryItems: List<GalleryItem>): RecyclerView.Adapter<PhotoHolder>(){
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PhotoHolder {
             val view = layoutInflater.inflate(
                 R.layout.list_item_view,
                 parent,
                 false
-            ) as ImageView
+            ) as View
             return PhotoHolder(view)
         }
 
-        override fun getItemCount(): Int =galleryItems.size
+        override fun getItemCount(): Int = galleryItems.size
 
         override fun onBindViewHolder(holder: PhotoHolder, position: Int) {
             val galleryItem = galleryItems[position]
@@ -134,7 +137,7 @@ class PhotoGalleryFragment : Fragment() {
                     R.drawable.bill_up_close
                 )?: ColorDrawable()
             holder.imageView.setImageDrawable(placeholder)
-            holder.textView.setText(galleryItem.title)
+            holder.textView.text = galleryItem.title
 
             thumbnailDownloader.queueThumbnail(holder, galleryItem.url)
         }

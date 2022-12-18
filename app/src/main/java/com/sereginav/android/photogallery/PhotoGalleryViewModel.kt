@@ -10,7 +10,7 @@ class PhotoGalleryViewModel(private  val app: Application) : AndroidViewModel(ap
     private val mutableSearchTerm = MutableLiveData<String>()
 
     val searchTerm :String
-    get() = mutableSearchTerm.value ?: ""
+        get() = mutableSearchTerm.value ?: ""
 
     init {
         mutableSearchTerm.value = QueryPreferences.getStoredQuery(app)
